@@ -8,5 +8,4 @@ def config():
         with open('config.yaml', mode='r') as f:
             __config = yaml.safe_load(f)
     
-    print(__config)
     return __config
