@@ -17,6 +17,7 @@ def main(filename):
     df = _extract_host(df)
     df = _fill_missing_titles(df)
     df = _generate_uids_for_rows(df)
+    df = _remove_news_lines_from_body(df)
 
     return df
 
@@ -67,6 +68,17 @@ def _generate_uids_for_rows(df):
     df.set_index('uid')
 
     return df
+
+def _remove_news_lines_from_body(df):
+    logger.info('Remove new lines from body')
+
+    stripped_body = (df
+                    .apply(lambda row: row['body'], axis=1)
+                    .astype(str).apply(lambda body: body.replace('\n',''))
+                )
+    df['body'] = stripped_body
+
+    return df.set_index('uid')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
