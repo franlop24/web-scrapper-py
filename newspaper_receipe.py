@@ -1,5 +1,6 @@
 import argparse
 import logging
+import hashlib
 logging.basicConfig(level=logging.INFO)
 from urllib.parse import urlparse
 
@@ -15,6 +16,7 @@ def main(filename):
     df = _add_newspaper_uid_column(df, newspaper_uid)
     df = _extract_host(df)
     df = _fill_missing_titles(df)
+    df = _generate_uids_for_rows(df)
 
     return df
 
@@ -54,6 +56,18 @@ def _fill_missing_titles(df):
     df.loc[missing_titles_mask, 'title'] = missing_titles.loc[:, 'missing_titles']
 
     return df
+
+def _generate_uids_for_rows(df):
+    logger.info('Generating uids for each row')
+    uids = (df
+            .apply(lambda row: hashlib.md5(bytes(row['url'].encode())), axis=1)
+            .apply(lambda hash_object: hash_object.hexdigest())
+        )
+    df['uid'] = uids
+    df.set_index('uid')
+
+    return df
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('filename',
