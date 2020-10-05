@@ -1,6 +1,9 @@
 import argparse
 import logging
 import hashlib
+import nltk
+from nltk.corpus import stopwords
+
 logging.basicConfig(level=logging.INFO)
 from urllib.parse import urlparse
 
@@ -18,6 +21,7 @@ def main(filename):
     df = _fill_missing_titles(df)
     df = _generate_uids_for_rows(df)
     df = _remove_news_lines_from_body(df)
+    df = _count_words_in_body_and_title(df)
 
     return df
 
@@ -79,6 +83,24 @@ def _remove_news_lines_from_body(df):
     df['body'] = stripped_body
 
     return df.set_index('uid')
+
+def _count_words_in_body_and_title(df):
+
+    df['n_tokens_title'] = tokenize_column(df, 'title')
+    df['n_tokens_body'] = tokenize_column(df, 'body')
+
+    return df
+
+def tokenize_column(df, column_name):
+    stop_words = set(stopwords.words('spanish'))
+    return (df
+            .dropna()
+            .apply(lambda row: nltk.word_tokenize(row[column_name]), axis=1)
+            .apply(lambda tokens: list(filter(lambda token: token.isalpha(), tokens)))
+            .apply(lambda tokens: list(map(lambda token: token.lower(), tokens)))
+            .apply(lambda word_list: list(filter(lambda word: word not in stop_words, word_list)))
+            .apply(lambda valid_word_list: len(valid_word_list))
+           )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
