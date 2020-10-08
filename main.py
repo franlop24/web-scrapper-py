@@ -5,8 +5,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 import re
 
-from requests.exceptions import HTTPError
-from urllib3.exceptions import MaxRetryError
+from requests.exceptions import HTTPError, ContentDecodingError
+from urllib3.exceptions import MaxRetryError, DecodeError
 
 import news_page_objects as news
 from common import config
@@ -56,7 +56,7 @@ def _fetch_article(news_site_uid, host, link):
 
     try:
         article = news.ArticlePage(news_site_uid, _build_link(host, link))
-    except (HTTPError, MaxRetryError) as e:
+    except (HTTPError, MaxRetryError, DecodeError, ContentDecodingError) as e:
         logger.warning('Error while fetching the article', exc_info=False)
 
     if article and not article.body:
